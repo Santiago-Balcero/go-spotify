@@ -39,5 +39,5 @@ func main() {
 		return
 	}
 
-	services.AnalyseArtist(&client, artist.Id)
+	services.AnalyseArtist(&client, &artist)
 }

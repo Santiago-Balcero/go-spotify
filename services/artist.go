@@ -1,7 +1,6 @@
 package services
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/Santiago-Balcero/go-spotify/models"
@@ -9,44 +8,50 @@ import (
 	"github.com/zmb3/spotify"
 )
 
-func AnalyseArtist(client *spotify.Client, artistId string) {
-	var maxDanceability float32
-	var maxDanceabilityTrack string
-	var maxEnergy float32
-	var maxEnergyTrack string
+func AnalyseArtist(client *spotify.Client, artistData *models.Artist) error {
+	artist, err := client.GetArtist((spotify.ID(artistData.Id)))
+	if err != nil {
+		return fmt.Errorf("error in GetArtist: %v", err)
+	}
 
-	artist, err := client.GetArtist((spotify.ID(artistId)))
-	utils.CheckError(err)
+	albums, err := client.GetArtistAlbums(spotify.ID(artistData.Id))
+	if err != nil {
+		return fmt.Errorf("error in GetArtistAlbums: %v", err)
+	}
 
-	fmt.Println("Artist name:", artist.Name)
-	fmt.Println("Artist popularity:", artist.Popularity)
-
-	albums, err := client.GetArtistAlbums(spotify.ID(artistId))
-	utils.CheckError(err)
+	albumsData := []models.Album{}
 
 	for _, album := range albums.Albums {
 		fmt.Println("Artist album:", album.Name)
 		tracks, err := client.GetAlbumTracks(album.ID)
 		utils.CheckError(err)
-
+		albumData := models.Album{
+			Name:        album.Name,
+			Type:        album.AlbumType,
+			ReleaseDate: album.ReleaseDate,
+			Tracks:      []models.Track{},
+		}
 		for _, track := range tracks.Tracks {
 			if utils.ArtistInList(track.Artists, artist.Name) {
 				fmt.Println("\tTrack:", track.Name)
-				danceability, energy := AnalyseTrack(client, track.ID)
-				if danceability > maxDanceability {
-					maxDanceability = danceability
-					maxDanceabilityTrack = track.Name
+				trackData := models.Track{
+					Id:   track.ID.String(),
+					Name: track.Name,
 				}
-				if energy > maxEnergy {
-					maxEnergy = energy
-					maxEnergyTrack = track.Name
+				err := AnalyseTrack(client, &trackData)
+				if err != nil {
+					return fmt.Errorf("error in AnalyseTrack: %v", err)
 				}
+				checkAlbumMaximums(&trackData, &albumData)
+				albumData.Tracks = append(albumData.Tracks, trackData)
 			}
 		}
+		albumsData = append(albumsData, albumData)
+		checkArtistMaximums(&albumData, artistData)
 	}
 
-	fmt.Println("Most danceable track:", maxDanceabilityTrack, maxDanceability)
-	fmt.Println("Most energetic track:", maxEnergyTrack, maxEnergy)
+	artistData.Albums = albumsData
+	return nil
 }
 
 func SearchArtist(client *spotify.Client, artistName string) (models.Artist, error) {
@@ -73,8 +78,30 @@ func SearchArtist(client *spotify.Client, artistName string) (models.Artist, err
 	}
 
 	if !artistFound {
-		return artist, errors.New("artist not found")
+		return artist, fmt.Errorf("artist not found")
 	}
 
 	return artist, nil
+}
+
+func checkAlbumMaximums(trackData *models.Track, albumData *models.Album) {
+	if trackData.Danceability > albumData.MaxDanceability {
+		albumData.MaxDanceability = trackData.Danceability
+		albumData.MaxDanceabilityTrack = trackData.Name
+	}
+	if trackData.Energy > albumData.MaxEnergy {
+		albumData.MaxEnergy = trackData.Energy
+		albumData.MaxEnergyTrack = trackData.Name
+	}
+}
+
+func checkArtistMaximums(albumData *models.Album, artistData *models.Artist) {
+	if albumData.MaxDanceability > artistData.MaxDanceability {
+		artistData.MaxDanceability = albumData.MaxDanceability
+		artistData.MaxDanceabilityTrack = albumData.MaxDanceabilityTrack
+	}
+	if albumData.MaxEnergy > artistData.MaxEnergy {
+		artistData.MaxEnergy = albumData.MaxEnergy
+		artistData.MaxDanceabilityTrack = albumData.MaxEnergyTrack
+	}
 }
