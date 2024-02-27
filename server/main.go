@@ -4,6 +4,10 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"os"
+	"os/signal"
+	"strings"
+	"syscall"
 
 	"github.com/Santiago-Balcero/go-spotify/config"
 	"github.com/Santiago-Balcero/go-spotify/models"
@@ -19,6 +23,18 @@ func main() {
 
 	http.HandleFunc("/spotify", artistStats)
 	http.ListenAndServe(":8080", nil)
+
+	c := make(chan os.Signal, 1)
+	signal.Notify(
+		c,
+		os.Interrupt,
+		syscall.SIGHUP,
+		syscall.SIGINT,
+		syscall.SIGQUIT,
+		syscall.SIGTERM,
+	)
+	<-c
+	log.Println("Server shut down")
 }
 
 func artistStats(w http.ResponseWriter, r *http.Request) {
@@ -35,6 +51,7 @@ func artistStats(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	log.Println("Request for artist:", artistName)
+	artistName = strings.ReplaceAll(artistName, "-", " ")
 	artist, err := services.SearchArtist(&client, artistName)
 	if err != nil {
 		log.Println("Error:", err)
@@ -46,6 +63,13 @@ func artistStats(w http.ResponseWriter, r *http.Request) {
 	log.Println("Artist found:", artist)
 
 	err = services.AnalyseArtist(&client, &artist)
+	if err != nil {
+		log.Println("Error:", err)
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(response)
+		log.Println("Error response:", response)
+		return
+	}
 	response.Code = 200
 	response.Message = "Artist processed"
 	response.Data = artist

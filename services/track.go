@@ -11,7 +11,7 @@ func AnalyseTrack(client *spotify.Client, track *models.Track) error {
 
 	features, err := client.GetAudioFeatures(spotify.ID(track.Id))
 	if err != nil {
-		return fmt.Errorf("error in GetAudioFeatures:", err)
+		return fmt.Errorf("error in GetAudioFeatures: %v", err)
 	}
 
 	track.Danceability = features[0].Danceability

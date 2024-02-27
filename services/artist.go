@@ -2,6 +2,7 @@ package services
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/Santiago-Balcero/go-spotify/models"
 	"github.com/Santiago-Balcero/go-spotify/utils"
@@ -63,7 +64,7 @@ func SearchArtist(client *spotify.Client, artistName string) (models.Artist, err
 
 	for _, a := range result.Artists.Artists {
 		name := utils.ClearString(a.Name)
-		if name == artistName {
+		if name == strings.ReplaceAll(artistName, " ", "") {
 			artist.Id = a.ID.String()
 			artist.Name = a.Name
 			artist.Popularity = a.Popularity
