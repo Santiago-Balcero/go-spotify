@@ -4,10 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
-	"os"
-	"os/signal"
 	"strings"
-	"syscall"
 
 	"github.com/Santiago-Balcero/go-spotify/config"
 	"github.com/Santiago-Balcero/go-spotify/models"
@@ -23,18 +20,6 @@ func main() {
 
 	http.HandleFunc("/spotify", artistStats)
 	http.ListenAndServe(":8080", nil)
-
-	c := make(chan os.Signal, 1)
-	signal.Notify(
-		c,
-		os.Interrupt,
-		syscall.SIGHUP,
-		syscall.SIGINT,
-		syscall.SIGQUIT,
-		syscall.SIGTERM,
-	)
-	<-c
-	log.Println("Server shut down")
 }
 
 func artistStats(w http.ResponseWriter, r *http.Request) {
