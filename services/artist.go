@@ -23,6 +23,7 @@ func AnalyseArtist(client *spotify.Client, artistData *models.Artist) error {
 	albumsData := []models.Album{}
 
 	for _, album := range albums.Albums {
+		artistData.AlbumsCount++
 		fmt.Println("Artist album:", album.Name)
 		tracks, err := client.GetAlbumTracks(album.ID)
 		utils.CheckError(err)
@@ -34,6 +35,7 @@ func AnalyseArtist(client *spotify.Client, artistData *models.Artist) error {
 		}
 		for _, track := range tracks.Tracks {
 			if utils.ArtistInList(track.Artists, artist.Name) {
+				artistData.TracksCount++
 				fmt.Println("\tTrack:", track.Name)
 				trackData := models.Track{
 					Id:   track.ID.String(),

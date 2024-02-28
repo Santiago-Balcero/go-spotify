@@ -13,6 +13,8 @@ type Artist struct {
 	MaxDanceabilityTrack string   `json:"maxDanceabilityTrack"`
 	MaxEnergy            float32  `json:"maxEnergy"`
 	MaxEnergyTrack       string   `json:"maxEnergyTrack"`
+	AlbumsCount          int      `json:"albumsCount"`
+	TracksCount          int      `json:"tracksCount"`
 }
 
 type Album struct {
