@@ -47,6 +47,7 @@ func AnalyseArtist(client *spotify.Client, artistData *models.Artist) error {
 				}
 				checkAlbumMaximums(&trackData, &albumData)
 				albumData.Tracks = append(albumData.Tracks, trackData)
+				albumData.TracksCount++
 			}
 		}
 		albumsData = append(albumsData, albumData)
