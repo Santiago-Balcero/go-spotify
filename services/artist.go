@@ -105,6 +105,6 @@ func checkArtistMaximums(albumData *models.Album, artistData *models.Artist) {
 	}
 	if albumData.MaxEnergy > artistData.MaxEnergy {
 		artistData.MaxEnergy = albumData.MaxEnergy
-		artistData.MaxDanceabilityTrack = albumData.MaxEnergyTrack
+		artistData.MaxEnergyTrack = albumData.MaxEnergyTrack
 	}
 }
